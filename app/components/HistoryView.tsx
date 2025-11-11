@@ -17,8 +17,8 @@ export default function HistoryView({
 
   if (dates.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-8 border text-center">
-        <p className="text-gray-600">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-8 border border-gray-700 text-center">
+        <p className="text-gray-400">
           No history yet. Start tracking your tasks!
         </p>
       </div>
@@ -36,12 +36,12 @@ export default function HistoryView({
         return (
           <div
             key={date}
-            className="bg-white rounded-lg shadow-sm p-5 border hover:border-blue-400 transition-colors"
+            className="bg-gray-800 rounded-lg shadow-sm p-5 border border-gray-700 hover:border-blue-600 transition-colors"
           >
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="font-semibold text-gray-900">{date}</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-white">{date}</h3>
+                <p className="text-sm text-gray-400">
                   {completed} of {total} tasks completed
                 </p>
               </div>
@@ -55,14 +55,14 @@ export default function HistoryView({
                 View
               </button>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-700 rounded-full h-2">
               <div
                 className={`h-2 rounded-full ${
                   percentage >= 80
-                    ? "bg-green-500"
+                    ? "bg-green-600"
                     : percentage >= 50
-                    ? "bg-yellow-500"
-                    : "bg-red-500"
+                    ? "bg-yellow-600"
+                    : "bg-red-600"
                 }`}
                 style={{ width: `${percentage}%` }}
               />

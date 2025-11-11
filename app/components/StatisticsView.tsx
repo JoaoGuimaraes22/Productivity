@@ -1,12 +1,19 @@
 "use client";
 
 import { DayTasks } from "@/app/lib/types";
-import { CATEGORY_COLORS } from "@/app/lib/types";
 import { useMemo } from "react";
 
 interface StatisticsViewProps {
   tasks: DayTasks;
 }
+
+const CATEGORY_COLORS_DARK = {
+  routine: "bg-blue-900 text-blue-300 border-blue-700",
+  fitness: "bg-red-900 text-red-300 border-red-700",
+  rest: "bg-green-900 text-green-300 border-green-700",
+  work: "bg-purple-900 text-purple-300 border-purple-700",
+  variable: "bg-yellow-900 text-yellow-300 border-yellow-700",
+};
 
 export default function StatisticsView({ tasks }: StatisticsViewProps) {
   const statistics = useMemo(() => {
@@ -121,8 +128,8 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
 
   if (!statistics) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-8 border text-center">
-        <p className="text-gray-600">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-8 border border-gray-700 text-center">
+        <p className="text-gray-400">
           No data yet. Start tracking your tasks to see statistics!
         </p>
       </div>
@@ -142,33 +149,33 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
     <div className="space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm p-4 border">
-          <p className="text-sm text-gray-600">Total Days</p>
-          <p className="text-2xl font-bold text-gray-900">{totalDays}</p>
+        <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
+          <p className="text-sm text-gray-400">Total Days</p>
+          <p className="text-2xl font-bold text-white">{totalDays}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 border">
-          <p className="text-sm text-gray-600">Completion Rate</p>
-          <p className="text-2xl font-bold text-blue-600">
+        <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
+          <p className="text-sm text-gray-400">Completion Rate</p>
+          <p className="text-2xl font-bold text-blue-400">
             {overallCompletion.toFixed(1)}%
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 border">
-          <p className="text-sm text-gray-600">Current Streak</p>
-          <p className="text-2xl font-bold text-green-600">
+        <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
+          <p className="text-sm text-gray-400">Current Streak</p>
+          <p className="text-2xl font-bold text-green-400">
             {currentStreak} days
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 border">
-          <p className="text-sm text-gray-600">Categories</p>
-          <p className="text-2xl font-bold text-purple-600">
+        <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
+          <p className="text-sm text-gray-400">Categories</p>
+          <p className="text-2xl font-bold text-purple-400">
             {Object.keys(categoryStats).length}
           </p>
         </div>
       </div>
 
       {/* Category Breakdown */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-700">
+        <h2 className="text-lg font-semibold text-white mb-4">
           Category Performance
         </h2>
         <div className="space-y-4">
@@ -179,18 +186,20 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
                 <div className="flex items-center justify-between mb-2">
                   <span
                     className={`px-3 py-1 text-sm rounded-full font-medium ${
-                      CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]
+                      CATEGORY_COLORS_DARK[
+                        category as keyof typeof CATEGORY_COLORS_DARK
+                      ]
                     }`}
                   >
                     {category}
                   </span>
-                  <span className="text-sm font-semibold text-gray-700">
+                  <span className="text-sm font-semibold text-gray-300">
                     {stats.completed}/{stats.total} ({percentage.toFixed(1)}%)
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-700 rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full"
+                    className="bg-blue-500 h-2 rounded-full"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -201,8 +210,8 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
       </div>
 
       {/* Individual Task Stats */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-700">
+        <h2 className="text-lg font-semibold text-white mb-4">
           Task Performance
         </h2>
         <div className="space-y-3">
@@ -216,28 +225,26 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
               return (
                 <div
                   key={taskId}
-                  className="border-b border-gray-100 pb-3 last:border-0"
+                  className="border-b border-gray-700 pb-3 last:border-0"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-gray-900">
-                      {stats.name}
-                    </span>
-                    <span className="text-sm text-gray-600">
+                    <span className="font-medium text-white">{stats.name}</span>
+                    <span className="text-sm text-gray-400">
                       {stats.completed}/{stats.total}
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-gray-700 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700 w-12 text-right">
+                    <span className="text-sm font-semibold text-gray-300 w-12 text-right">
                       {percentage.toFixed(0)}%
                     </span>
                     {stats.qualityCount > 0 && (
-                      <span className="text-sm text-yellow-600 font-medium">
+                      <span className="text-sm text-yellow-400 font-medium">
                         ⭐ {stats.avgQuality.toFixed(1)}
                       </span>
                     )}
@@ -249,8 +256,8 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
       </div>
 
       {/* Daily Completion Trend */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-700">
+        <h2 className="text-lg font-semibold text-white mb-4">
           Daily Completion Trend
         </h2>
         <div className="space-y-2">
@@ -259,15 +266,15 @@ export default function StatisticsView({ tasks }: StatisticsViewProps) {
             .reverse()
             .map((day) => (
               <div key={day.date} className="flex items-center space-x-3">
-                <span className="text-sm text-gray-600 w-24">{day.date}</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-6">
+                <span className="text-sm text-gray-400 w-24">{day.date}</span>
+                <div className="flex-1 bg-gray-700 rounded-full h-6">
                   <div
                     className={`h-6 rounded-full flex items-center justify-end px-2 ${
                       day.percentage >= 80
-                        ? "bg-green-500"
+                        ? "bg-green-600"
                         : day.percentage >= 50
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
+                        ? "bg-yellow-600"
+                        : "bg-red-600"
                     }`}
                     style={{ width: `${day.percentage}%` }}
                   >

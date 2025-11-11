@@ -11,6 +11,14 @@ interface TodayViewProps {
   openTaskModal: (task: Task) => void;
 }
 
+const CATEGORY_COLORS_DARK = {
+  routine: "bg-blue-900 text-blue-300 border-blue-700",
+  fitness: "bg-red-900 text-red-300 border-red-700",
+  rest: "bg-green-900 text-green-300 border-green-700",
+  work: "bg-purple-900 text-purple-300 border-purple-700",
+  variable: "bg-yellow-900 text-yellow-300 border-yellow-700",
+};
+
 export default function TodayView({
   selectedDate,
   setSelectedDate,
@@ -24,8 +32,8 @@ export default function TodayView({
   return (
     <div className="space-y-6">
       {/* Date Selector */}
-      <div className="bg-white rounded-lg shadow-sm p-4 border">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
           Select Date
         </label>
         <input
@@ -33,27 +41,25 @@ export default function TodayView({
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
           max={new Date().toISOString().split("T")[0]}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
 
       {/* Progress Overview */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-700">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Daily Progress
-          </h2>
-          <span className="text-2xl font-bold text-blue-600">
+          <h2 className="text-lg font-semibold text-white">Daily Progress</h2>
+          <span className="text-2xl font-bold text-blue-400">
             {completedCount}/{tasks.length}
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
+        <div className="w-full bg-gray-700 rounded-full h-3">
           <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+            className="bg-blue-500 h-3 rounded-full transition-all duration-300"
             style={{ width: `${completionPercentage}%` }}
           />
         </div>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-sm text-gray-400 mt-2">
           {completionPercentage.toFixed(0)}% complete
         </p>
       </div>
@@ -63,10 +69,10 @@ export default function TodayView({
         {tasks.map((task) => (
           <div
             key={task.id}
-            className={`bg-white rounded-lg shadow-sm border-2 transition-all ${
+            className={`bg-gray-800 rounded-lg shadow-sm border-2 transition-all ${
               task.completed
-                ? "border-green-400 bg-green-50"
-                : "border-gray-200"
+                ? "border-green-600 bg-gray-750"
+                : "border-gray-700"
             }`}
           >
             <div className="p-4">
@@ -88,8 +94,8 @@ export default function TodayView({
                   }}
                   className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                     task.completed
-                      ? "bg-green-500 border-green-500"
-                      : "border-gray-300 hover:border-blue-500"
+                      ? "bg-green-600 border-green-600"
+                      : "border-gray-600 hover:border-blue-500"
                   }`}
                 >
                   {task.completed && (
@@ -113,21 +119,21 @@ export default function TodayView({
                     <h3
                       className={`font-semibold ${
                         task.completed
-                          ? "text-gray-600 line-through"
-                          : "text-gray-900"
+                          ? "text-gray-500 line-through"
+                          : "text-white"
                       }`}
                     >
                       {task.name}
                     </h3>
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
-                        CATEGORY_COLORS[task.category]
+                        CATEGORY_COLORS_DARK[task.category]
                       }`}
                     >
                       {task.category}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-600 space-y-1">
+                  <div className="text-sm text-gray-400 space-y-1">
                     <p>
                       ⏰ {task.startTime} - {task.endTime}
                     </p>
@@ -138,7 +144,7 @@ export default function TodayView({
                       <p>📊 Duration: {task.actualDuration} min</p>
                     )}
                     {task.completed && task.notes && (
-                      <p className="text-gray-700">📝 {task.notes}</p>
+                      <p className="text-gray-300">📝 {task.notes}</p>
                     )}
                     {task.note && !task.completed && (
                       <p className="text-gray-500 italic">{task.note}</p>
@@ -150,7 +156,7 @@ export default function TodayView({
                 {task.completed && (
                   <button
                     onClick={() => openTaskModal(task)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium"
                   >
                     Edit
                   </button>

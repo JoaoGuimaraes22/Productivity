@@ -98,37 +98,37 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-900 pb-20">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <div className="bg-gray-800 shadow-sm border-b border-gray-700 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Task Tracker</h1>
-          <p className="text-sm text-gray-600">
+          <h1 className="text-2xl font-bold text-white">Task Tracker</h1>
+          <p className="text-sm text-gray-400">
             Track your daily routine with detailed insights
           </p>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b">
+      <div className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex space-x-4">
             <button
               onClick={() => setCurrentView("today")}
               className={`py-3 px-4 font-medium border-b-2 transition-colors ${
                 currentView === "today"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
               }`}
             >
               Today
@@ -137,8 +137,8 @@ export default function Home() {
               onClick={() => setCurrentView("statistics")}
               className={`py-3 px-4 font-medium border-b-2 transition-colors ${
                 currentView === "statistics"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
               }`}
             >
               Statistics
@@ -147,8 +147,8 @@ export default function Home() {
               onClick={() => setCurrentView("history")}
               className={`py-3 px-4 font-medium border-b-2 transition-colors ${
                 currentView === "history"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
               }`}
             >
               History
