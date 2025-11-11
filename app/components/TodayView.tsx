@@ -1,7 +1,6 @@
 "use client";
 
 import { Task } from "@/app/lib/types";
-import { CATEGORY_COLORS } from "@/app/lib/types";
 
 interface TodayViewProps {
   selectedDate: string;
@@ -9,6 +8,8 @@ interface TodayViewProps {
   tasks: Task[];
   updateTask: (taskId: string, updates: Partial<Task>) => void;
   openTaskModal: (task: Task) => void;
+  onAddTask: () => void;
+  onEditTask: (task: Task) => void;
 }
 
 const CATEGORY_COLORS_DARK = {
@@ -25,6 +26,8 @@ export default function TodayView({
   tasks,
   updateTask,
   openTaskModal,
+  onAddTask,
+  onEditTask,
 }: TodayViewProps) {
   const completedCount = tasks.filter((t) => t.completed).length;
   const completionPercentage = (completedCount / tasks.length) * 100;
@@ -63,6 +66,25 @@ export default function TodayView({
           {completionPercentage.toFixed(0)}% complete
         </p>
       </div>
+
+      {/* Add Task Button */}
+      <button
+        onClick={onAddTask}
+        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+      >
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span>Add Custom Task</span>
+      </button>
 
       {/* Task List */}
       <div className="space-y-3">
@@ -132,6 +154,11 @@ export default function TodayView({
                     >
                       {task.category}
                     </span>
+                    {task.isCustom && (
+                      <span className="px-2 py-1 text-xs rounded-full bg-indigo-900 text-indigo-300 border-indigo-700">
+                        custom
+                      </span>
+                    )}
                   </div>
                   <div className="text-sm text-gray-400 space-y-1">
                     <p>
@@ -152,15 +179,37 @@ export default function TodayView({
                   </div>
                 </div>
 
-                {/* Edit Button */}
-                {task.completed && (
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-2">
+                  {/* Edit Task Button */}
                   <button
-                    onClick={() => openTaskModal(task)}
-                    className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                    onClick={() => onEditTask(task)}
+                    className="text-gray-400 hover:text-blue-400 transition-colors"
+                    title="Edit task"
                   >
-                    Edit
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
                   </button>
-                )}
+
+                  {/* Edit Completion Button (if completed) */}
+                  {task.completed && (
+                    <button
+                      onClick={() => openTaskModal(task)}
+                      className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

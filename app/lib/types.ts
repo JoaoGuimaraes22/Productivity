@@ -11,6 +11,7 @@ export interface Task {
   actualDuration: number | null;
   notes: string;
   completedAt: string | null;
+  isCustom?: boolean; // New: marks if task was custom added
 }
 
 export interface DayTasks {

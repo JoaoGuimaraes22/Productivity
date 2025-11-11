@@ -6,6 +6,7 @@ import TodayView from "@/app/components/TodayView";
 import StatisticsView from "@/app/components/StatisticsView";
 import HistoryView from "@/app/components/HistoryView";
 import TaskModal from "@/app/components/TaskModal";
+import TaskEditorModal from "@/app/components/TaskEditorModal";
 
 export default function Home() {
   const [currentView, setCurrentView] = useState("today");
@@ -15,6 +16,8 @@ export default function Home() {
   const [tasks, setTasks] = useState<DayTasks>({});
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showTaskEditor, setShowTaskEditor] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load tasks from API on mount
@@ -96,6 +99,69 @@ export default function Home() {
     setSelectedTask(null);
   };
 
+  const handleAddTask = () => {
+    setEditingTask(null);
+    setShowTaskEditor(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setShowTaskEditor(true);
+  };
+
+  const handleSaveTask = (
+    taskData: Omit<
+      Task,
+      "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+    >
+  ) => {
+    const dayTasks = getTodaysTasks();
+
+    if (editingTask) {
+      // Editing existing task - preserve completion data
+      setTasks((prev) => ({
+        ...prev,
+        [selectedDate]: dayTasks.map((task) =>
+          task.id === editingTask.id
+            ? {
+                ...task,
+                ...taskData,
+              }
+            : task
+        ),
+      }));
+    } else {
+      // Adding new task
+      const newTask: Task = {
+        ...taskData,
+        completed: false,
+        quality: null,
+        actualDuration: null,
+        notes: "",
+        completedAt: null,
+      };
+
+      setTasks((prev) => ({
+        ...prev,
+        [selectedDate]: [...dayTasks, newTask].sort((a, b) =>
+          a.startTime.localeCompare(b.startTime)
+        ),
+      }));
+    }
+
+    setShowTaskEditor(false);
+    setEditingTask(null);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setTasks((prev) => ({
+      ...prev,
+      [selectedDate]: getTodaysTasks().filter((task) => task.id !== taskId),
+    }));
+    setShowTaskEditor(false);
+    setEditingTask(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -166,6 +232,8 @@ export default function Home() {
             tasks={getTodaysTasks()}
             updateTask={updateTask}
             openTaskModal={openTaskModal}
+            onAddTask={handleAddTask}
+            onEditTask={handleEditTask}
           />
         )}
 
@@ -180,7 +248,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Task Detail Modal */}
+      {/* Task Detail Modal (for completion) */}
       {showTaskModal && selectedTask && (
         <TaskModal
           task={selectedTask}
@@ -189,6 +257,19 @@ export default function Home() {
             setSelectedTask(null);
           }}
           onSave={saveTaskDetails}
+        />
+      )}
+
+      {/* Task Editor Modal (for add/edit) */}
+      {showTaskEditor && (
+        <TaskEditorModal
+          task={editingTask || undefined}
+          onClose={() => {
+            setShowTaskEditor(false);
+            setEditingTask(null);
+          }}
+          onSave={handleSaveTask}
+          onDelete={handleDeleteTask}
         />
       )}
     </div>
