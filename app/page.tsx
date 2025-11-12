@@ -17,11 +17,13 @@ import HistoryView from "@/app/components/HistoryView";
 import CalendarView from "@/app/components/CalendarView";
 import WeekView from "@/app/components/WeekView";
 import BaseWeekEditor from "@/app/components/BaseWeekEditor";
+import TimeBlockView from "@/app/components/TimeBlockView";
+import WeekTimeBlockView from "@/app/components/WeekTimeBlockView";
 import TaskModal from "@/app/components/TaskModal";
 import TaskEditorModal from "@/app/components/TaskEditorModal";
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState("today");
+  const [currentView, setCurrentView] = useState("timeblock");
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -269,7 +271,39 @@ export default function Home() {
 
   const handleEditDay = (date: string, dayOfWeek: string) => {
     setSelectedDate(date);
-    setCurrentView("today");
+    setCurrentView("timeblock");
+  };
+
+  const handleTimeSlotClick = (time: string) => {
+    // Open task editor with pre-filled time
+    setEditingTask(null);
+    setEditingDayOfWeek(null);
+    setShowTaskEditor(true);
+    // TODO: Pass time to task editor to pre-fill start time
+  };
+
+  const handleTaskClickFromTimeBlock = (task: Task) => {
+    if (task.completed) {
+      // If completed, open details modal
+      openTaskModal(task);
+    } else {
+      // If not completed, mark as complete
+      openTaskModal(task);
+    }
+  };
+
+  const handleWeekTimeSlotClick = (date: string, time: string) => {
+    setSelectedDate(date);
+    handleTimeSlotClick(time);
+  };
+
+  const handleWeekTaskClick = (date: string, taskId: string) => {
+    setSelectedDate(date);
+    const dayTasks = tasks[date] || getTodaysTasks();
+    const task = dayTasks.find((t) => t.id === taskId);
+    if (task) {
+      handleTaskClickFromTimeBlock(task);
+    }
   };
 
   if (loading) {
@@ -300,6 +334,26 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex space-x-4 overflow-x-auto">
             <button
+              onClick={() => setCurrentView("timeblock")}
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                currentView === "timeblock"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setCurrentView("weektimeblock")}
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                currentView === "weektimeblock"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              Week
+            </button>
+            <button
               onClick={() => setCurrentView("today")}
               className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 currentView === "today"
@@ -307,17 +361,7 @@ export default function Home() {
                   : "border-transparent text-gray-400 hover:text-gray-200"
               }`}
             >
-              Today
-            </button>
-            <button
-              onClick={() => setCurrentView("week")}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
-                currentView === "week"
-                  ? "border-blue-500 text-blue-400"
-                  : "border-transparent text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              Week View
+              List
             </button>
             <button
               onClick={() => setCurrentView("baseweek")}
@@ -364,7 +408,26 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-6 h-[calc(100vh-200px)]">
+        {currentView === "timeblock" && (
+          <TimeBlockView
+            selectedDate={selectedDate}
+            tasks={getTodaysTasks()}
+            onTaskClick={handleTaskClickFromTimeBlock}
+            onAddTask={() => handleAddTask()}
+            onTimeSlotClick={handleTimeSlotClick}
+          />
+        )}
+
+        {currentView === "weektimeblock" && (
+          <WeekTimeBlockView
+            baseWeek={baseWeek}
+            specificTasks={specificTasks}
+            onTaskClick={handleWeekTaskClick}
+            onTimeSlotClick={handleWeekTimeSlotClick}
+          />
+        )}
+
         {currentView === "today" && (
           <TodayView
             selectedDate={selectedDate}
@@ -390,7 +453,18 @@ export default function Home() {
             baseWeek={baseWeek}
             onUpdateBaseWeek={setBaseWeek}
             onAddTask={(day) => handleAddTask(day)}
-            onEditTask={(day, task) => handleEditTask(task as Task, day)}
+            onEditTask={(day, task) => {
+              // Convert template task to full Task by adding completion fields
+              const fullTask: Task = {
+                ...task,
+                completed: false,
+                quality: null,
+                actualDuration: null,
+                notes: "",
+                completedAt: null,
+              };
+              handleEditTask(fullTask, day);
+            }}
           />
         )}
 
