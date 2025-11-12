@@ -31,19 +31,31 @@ export default function TodayView({
 }: TodayViewProps) {
   const completedCount = tasks.filter((t) => t.completed).length;
   const completionPercentage = (completedCount / tasks.length) * 100;
+  const today = new Date().toISOString().split("T")[0];
+  const isToday = selectedDate === today;
 
   return (
     <div className="space-y-6">
       {/* Date Selector */}
       <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          Select Date
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Select Date
+          </label>
+          {!isToday && (
+            <button
+              onClick={() => setSelectedDate(today)}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors font-medium"
+            >
+              Go to Today
+            </button>
+          )}
+        </div>
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          max={new Date().toISOString().split("T")[0]}
+          max={today}
           className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>

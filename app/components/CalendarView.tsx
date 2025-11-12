@@ -132,16 +132,17 @@ export default function CalendarView({
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Calendar Header */}
-      <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-3 md:p-4 border border-gray-700">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
           <button
             onClick={previousMonth}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 md:p-2 hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
+            aria-label="Previous month"
           >
             <svg
-              className="w-5 h-5 text-gray-300"
+              className="w-6 h-6 md:w-5 md:h-5 text-gray-300"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -153,11 +154,13 @@ export default function CalendarView({
             </svg>
           </button>
 
-          <div className="flex items-center space-x-3">
-            <h2 className="text-xl font-bold text-white">{monthYearString}</h2>
+          <div className="flex flex-col md:flex-row items-center md:space-x-3">
+            <h2 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-0">
+              {monthYearString}
+            </h2>
             <button
               onClick={goToToday}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs md:text-sm rounded-lg transition-colors touch-manipulation"
             >
               Today
             </button>
@@ -165,10 +168,11 @@ export default function CalendarView({
 
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 md:p-2 hover:bg-gray-700 rounded-lg transition-colors touch-manipulation"
+            aria-label="Next month"
           >
             <svg
-              className="w-5 h-5 text-gray-300"
+              className="w-6 h-6 md:w-5 md:h-5 text-gray-300"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -182,11 +186,11 @@ export default function CalendarView({
         </div>
 
         {/* Day of week headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-1 md:mb-2">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
               key={day}
-              className="text-center text-sm font-semibold text-gray-400 py-2"
+              className="text-center text-xs md:text-sm font-semibold text-gray-400 py-1 md:py-2"
             >
               {day}
             </div>
@@ -194,7 +198,7 @@ export default function CalendarView({
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 md:gap-1">
           {calendarData.map((dayData, index) => {
             const stats = getCompletionStats(dayData.dateString);
             const isToday = dayData.dateString === today;
@@ -209,7 +213,7 @@ export default function CalendarView({
                 }
                 disabled={!dayData.isCurrentMonth || isFuture}
                 className={`
-                  aspect-square p-2 rounded-lg border-2 transition-all
+                  aspect-square p-1 md:p-2 rounded-md md:rounded-lg border-2 transition-all touch-manipulation
                   ${
                     !dayData.isCurrentMonth
                       ? "bg-gray-900 border-gray-800 text-gray-600 cursor-default"
@@ -218,14 +222,14 @@ export default function CalendarView({
                       : isToday
                       ? "bg-blue-900 border-blue-500 hover:bg-blue-800"
                       : hasData
-                      ? "bg-gray-800 border-gray-600 hover:border-blue-500 hover:bg-gray-750"
+                      ? "bg-gray-800 border-gray-600 hover:border-blue-500 hover:bg-gray-750 active:bg-gray-700"
                       : "bg-gray-800 border-gray-700 hover:border-gray-500"
                   }
                 `}
               >
                 <div className="flex flex-col items-center justify-center h-full">
                   <span
-                    className={`text-sm font-semibold mb-1 ${
+                    className={`text-xs md:text-sm font-semibold mb-0.5 md:mb-1 ${
                       !dayData.isCurrentMonth
                         ? "text-gray-600"
                         : isToday
@@ -240,13 +244,13 @@ export default function CalendarView({
 
                   {/* Completion indicator */}
                   {stats && dayData.isCurrentMonth && !isFuture && (
-                    <div className="flex flex-col items-center space-y-1">
+                    <div className="flex flex-col items-center space-y-0.5">
                       <div
-                        className={`w-2 h-2 rounded-full ${getCompletionColor(
+                        className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${getCompletionColor(
                           stats.percentage
                         )}`}
                       />
-                      <span className="text-xs text-gray-400">
+                      <span className="text-[10px] md:text-xs text-gray-400 leading-none">
                         {stats.completed}/{stats.total}
                       </span>
                     </div>
@@ -259,24 +263,32 @@ export default function CalendarView({
       </div>
 
       {/* Legend */}
-      <div className="bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-700">
-        <h3 className="text-sm font-semibold text-white mb-3">Legend</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="bg-gray-800 rounded-lg shadow-sm p-3 md:p-4 border border-gray-700">
+        <h3 className="text-sm font-semibold text-white mb-2 md:mb-3">
+          Legend
+        </h3>
+        <div className="grid grid-cols-2 gap-2 md:gap-3">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-sm text-gray-300">80%+ Complete</span>
+            <div className="w-3 h-3 rounded-full bg-green-500 shrink-0"></div>
+            <span className="text-xs md:text-sm text-gray-300">
+              80%+ Complete
+            </span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className="text-sm text-gray-300">50-79% Complete</span>
+            <div className="w-3 h-3 rounded-full bg-yellow-500 shrink-0"></div>
+            <span className="text-xs md:text-sm text-gray-300">
+              50-79% Complete
+            </span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className="text-sm text-gray-300">1-49% Complete</span>
+            <div className="w-3 h-3 rounded-full bg-red-500 shrink-0"></div>
+            <span className="text-xs md:text-sm text-gray-300">
+              1-49% Complete
+            </span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-gray-600"></div>
-            <span className="text-sm text-gray-300">No Tasks</span>
+            <div className="w-3 h-3 rounded-full bg-gray-600 shrink-0"></div>
+            <span className="text-xs md:text-sm text-gray-300">No Tasks</span>
           </div>
         </div>
       </div>
@@ -289,8 +301,8 @@ export default function CalendarView({
           ).padStart(2, "0")}`
         )
       ) && (
-        <div className="bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="bg-gray-800 rounded-lg shadow-sm p-4 md:p-6 border border-gray-700">
+          <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">
             Month Summary
           </h3>
           {(() => {
@@ -315,33 +327,43 @@ export default function CalendarView({
               totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
             return (
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Days Tracked</span>
-                  <span className="text-white font-semibold">
+                  <span className="text-sm md:text-base text-gray-300">
+                    Days Tracked
+                  </span>
+                  <span className="text-sm md:text-base text-white font-semibold">
                     {monthDates.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Total Tasks</span>
-                  <span className="text-white font-semibold">{totalTasks}</span>
+                  <span className="text-sm md:text-base text-gray-300">
+                    Total Tasks
+                  </span>
+                  <span className="text-sm md:text-base text-white font-semibold">
+                    {totalTasks}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-300">Completed</span>
-                  <span className="text-white font-semibold">
+                  <span className="text-sm md:text-base text-gray-300">
+                    Completed
+                  </span>
+                  <span className="text-sm md:text-base text-white font-semibold">
                     {completedTasks}
                   </span>
                 </div>
                 <div className="pt-2">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-300">Completion Rate</span>
-                    <span className="text-blue-400 font-bold">
+                    <span className="text-sm md:text-base text-gray-300">
+                      Completion Rate
+                    </span>
+                    <span className="text-base md:text-lg text-blue-400 font-bold">
                       {monthPercentage.toFixed(1)}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-3">
+                  <div className="w-full bg-gray-700 rounded-full h-2 md:h-3">
                     <div
-                      className="bg-blue-500 h-3 rounded-full transition-all"
+                      className="bg-blue-500 h-2 md:h-3 rounded-full transition-all"
                       style={{ width: `${monthPercentage}%` }}
                     />
                   </div>
