@@ -1,11 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Task, DayTasks, TASK_TEMPLATE } from "@/app/lib/types";
+import {
+  Task,
+  DayTasks,
+  TASK_TEMPLATE,
+  BaseWeekTemplate,
+  SpecificDayTasks,
+  DayOfWeek,
+  mergeTasks,
+  getDayOfWeek,
+} from "@/app/lib/types";
 import TodayView from "@/app/components/TodayView";
 import StatisticsView from "@/app/components/StatisticsView";
 import HistoryView from "@/app/components/HistoryView";
 import CalendarView from "@/app/components/CalendarView";
+import WeekView from "@/app/components/WeekView";
+import BaseWeekEditor from "@/app/components/BaseWeekEditor";
 import TaskModal from "@/app/components/TaskModal";
 import TaskEditorModal from "@/app/components/TaskEditorModal";
 
@@ -15,15 +26,28 @@ export default function Home() {
     new Date().toISOString().split("T")[0]
   );
   const [tasks, setTasks] = useState<DayTasks>({});
+  const [baseWeek, setBaseWeek] = useState<BaseWeekTemplate>({
+    monday: [],
+    tuesday: [],
+    wednesday: [],
+    thursday: [],
+    friday: [],
+    saturday: [],
+    sunday: [],
+  });
+  const [specificTasks, setSpecificTasks] = useState<SpecificDayTasks>({});
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskEditor, setShowTaskEditor] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingDayOfWeek, setEditingDayOfWeek] = useState<DayOfWeek | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
-  // Load tasks from API on mount
+  // Load data from API on mount
   useEffect(() => {
-    loadTasks();
+    loadData();
   }, []);
 
   // Save tasks to API whenever they change
@@ -33,13 +57,28 @@ export default function Home() {
     }
   }, [tasks, loading]);
 
-  const loadTasks = async () => {
+  // Save planner data whenever it changes
+  useEffect(() => {
+    if (!loading) {
+      savePlannerData();
+    }
+  }, [baseWeek, specificTasks, loading]);
+
+  const loadData = async () => {
     try {
-      const response = await fetch("/api/tasks");
-      const data = await response.json();
-      setTasks(data);
+      const [tasksRes, plannerRes] = await Promise.all([
+        fetch("/api/tasks"),
+        fetch("/api/planner"),
+      ]);
+
+      const tasksData = await tasksRes.json();
+      const plannerData = await plannerRes.json();
+
+      setTasks(tasksData);
+      setBaseWeek(plannerData.baseWeek);
+      setSpecificTasks(plannerData.specificTasks);
     } catch (error) {
-      console.error("Error loading tasks:", error);
+      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
@@ -59,8 +98,37 @@ export default function Home() {
     }
   };
 
+  const savePlannerData = async () => {
+    try {
+      await fetch("/api/planner", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ baseWeek, specificTasks }),
+      });
+    } catch (error) {
+      console.error("Error saving planner data:", error);
+    }
+  };
+
   const getTodaysTasks = (): Task[] => {
     if (!tasks[selectedDate]) {
+      // Use planner data if available, otherwise fall back to template
+      const plannedTasks = mergeTasks(selectedDate, baseWeek, specificTasks);
+
+      if (plannedTasks.length > 0) {
+        return plannedTasks.map((t) => ({
+          ...t,
+          completed: false,
+          quality: null,
+          actualDuration: null,
+          notes: "",
+          completedAt: null,
+        }));
+      }
+
+      // Fallback to template
       return TASK_TEMPLATE.map((t) => ({
         ...t,
         completed: false,
@@ -100,13 +168,15 @@ export default function Home() {
     setSelectedTask(null);
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = (dayOfWeek?: DayOfWeek) => {
     setEditingTask(null);
+    setEditingDayOfWeek(dayOfWeek || null);
     setShowTaskEditor(true);
   };
 
-  const handleEditTask = (task: Task) => {
+  const handleEditTask = (task: Task, dayOfWeek?: DayOfWeek) => {
     setEditingTask(task);
+    setEditingDayOfWeek(dayOfWeek || null);
     setShowTaskEditor(true);
   };
 
@@ -116,51 +186,90 @@ export default function Home() {
       "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
     >
   ) => {
-    const dayTasks = getTodaysTasks();
+    // If editing base week task
+    if (editingDayOfWeek) {
+      if (editingTask) {
+        // Update existing base week task
+        setBaseWeek((prev) => ({
+          ...prev,
+          [editingDayOfWeek]: prev[editingDayOfWeek].map((task) =>
+            task.id === editingTask.id ? taskData : task
+          ),
+        }));
+      } else {
+        // Add new base week task
+        setBaseWeek((prev) => ({
+          ...prev,
+          [editingDayOfWeek]: [...prev[editingDayOfWeek], taskData].sort(
+            (a, b) => a.startTime.localeCompare(b.startTime)
+          ),
+        }));
+      }
+    } else {
+      // Regular day task
+      const dayTasks = getTodaysTasks();
 
-    if (editingTask) {
-      // Editing existing task - preserve completion data
-      setTasks((prev) => ({
+      if (editingTask) {
+        setTasks((prev) => ({
+          ...prev,
+          [selectedDate]: dayTasks.map((task) =>
+            task.id === editingTask.id
+              ? {
+                  ...task,
+                  ...taskData,
+                }
+              : task
+          ),
+        }));
+      } else {
+        const newTask: Task = {
+          ...taskData,
+          completed: false,
+          quality: null,
+          actualDuration: null,
+          notes: "",
+          completedAt: null,
+        };
+
+        setTasks((prev) => ({
+          ...prev,
+          [selectedDate]: [...dayTasks, newTask].sort((a, b) =>
+            a.startTime.localeCompare(b.startTime)
+          ),
+        }));
+      }
+    }
+
+    setShowTaskEditor(false);
+    setEditingTask(null);
+    setEditingDayOfWeek(null);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (editingDayOfWeek) {
+      // Delete from base week
+      setBaseWeek((prev) => ({
         ...prev,
-        [selectedDate]: dayTasks.map((task) =>
-          task.id === editingTask.id
-            ? {
-                ...task,
-                ...taskData,
-              }
-            : task
+        [editingDayOfWeek]: prev[editingDayOfWeek].filter(
+          (task) => task.id !== taskId
         ),
       }));
     } else {
-      // Adding new task
-      const newTask: Task = {
-        ...taskData,
-        completed: false,
-        quality: null,
-        actualDuration: null,
-        notes: "",
-        completedAt: null,
-      };
-
+      // Delete from regular day
       setTasks((prev) => ({
         ...prev,
-        [selectedDate]: [...dayTasks, newTask].sort((a, b) =>
-          a.startTime.localeCompare(b.startTime)
-        ),
+        [selectedDate]: getTodaysTasks().filter((task) => task.id !== taskId),
       }));
     }
 
     setShowTaskEditor(false);
     setEditingTask(null);
+    setEditingDayOfWeek(null);
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    setTasks((prev) => ({
-      ...prev,
-      [selectedDate]: getTodaysTasks().filter((task) => task.id !== taskId),
-    }));
-    setShowTaskEditor(false);
-    setEditingTask(null);
+  const handleEditDay = (date: string, dayOfWeek: string) => {
+    setSelectedDate(date);
+    setCurrentView("today");
   };
 
   if (loading) {
@@ -178,7 +287,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-900 pb-20">
       {/* Header */}
       <div className="bg-gray-800 shadow-sm border-b border-gray-700 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-white">Task Tracker</h1>
           <p className="text-sm text-gray-400">
             Track your daily routine with detailed insights
@@ -188,7 +297,7 @@ export default function Home() {
 
       {/* Navigation Tabs */}
       <div className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="flex space-x-4 overflow-x-auto">
             <button
               onClick={() => setCurrentView("today")}
@@ -199,6 +308,26 @@ export default function Home() {
               }`}
             >
               Today
+            </button>
+            <button
+              onClick={() => setCurrentView("week")}
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                currentView === "week"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              Week View
+            </button>
+            <button
+              onClick={() => setCurrentView("baseweek")}
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                currentView === "baseweek"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              Base Week
             </button>
             <button
               onClick={() => setCurrentView("calendar")}
@@ -235,7 +364,7 @@ export default function Home() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {currentView === "today" && (
           <TodayView
             selectedDate={selectedDate}
@@ -243,8 +372,25 @@ export default function Home() {
             tasks={getTodaysTasks()}
             updateTask={updateTask}
             openTaskModal={openTaskModal}
-            onAddTask={handleAddTask}
-            onEditTask={handleEditTask}
+            onAddTask={() => handleAddTask()}
+            onEditTask={(task) => handleEditTask(task)}
+          />
+        )}
+
+        {currentView === "week" && (
+          <WeekView
+            baseWeek={baseWeek}
+            specificTasks={specificTasks}
+            onEditDay={handleEditDay}
+          />
+        )}
+
+        {currentView === "baseweek" && (
+          <BaseWeekEditor
+            baseWeek={baseWeek}
+            onUpdateBaseWeek={setBaseWeek}
+            onAddTask={(day) => handleAddTask(day)}
+            onEditTask={(day, task) => handleEditTask(task as Task, day)}
           />
         )}
 
@@ -286,6 +432,7 @@ export default function Home() {
           onClose={() => {
             setShowTaskEditor(false);
             setEditingTask(null);
+            setEditingDayOfWeek(null);
           }}
           onSave={handleSaveTask}
           onDelete={handleDeleteTask}

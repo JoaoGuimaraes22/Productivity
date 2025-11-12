@@ -11,12 +11,62 @@ export interface Task {
   actualDuration: number | null;
   notes: string;
   completedAt: string | null;
-  isCustom?: boolean; // New: marks if task was custom added
+  isCustom?: boolean;
+  isRepeatable?: boolean; // New: marks if task comes from base week template
 }
 
 export interface DayTasks {
   [date: string]: Task[];
 }
+
+// New: Base week template (repeatable tasks for each day)
+export interface BaseWeekTemplate {
+  monday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+  tuesday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+  wednesday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+  thursday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+  friday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+  saturday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+  sunday: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+}
+
+// New: Specific day tasks (one-off tasks for specific dates)
+export interface SpecificDayTasks {
+  [date: string]: Omit<
+    Task,
+    "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+  >[];
+}
+
+export type DayOfWeek =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
 
 export const TASK_TEMPLATE: Omit<
   Task,
@@ -111,4 +161,44 @@ export const CATEGORY_COLORS = {
   rest: "bg-green-100 text-green-800 border-green-300",
   work: "bg-purple-100 text-purple-800 border-purple-300",
   variable: "bg-yellow-100 text-yellow-800 border-yellow-300",
+};
+
+// Helper to get day of week from date string (YYYY-MM-DD)
+export const getDayOfWeek = (dateString: string): DayOfWeek => {
+  const date = new Date(dateString + "T12:00:00"); // Add time to avoid timezone issues
+  const days: DayOfWeek[] = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+  return days[date.getDay()];
+};
+
+// Helper to merge base week tasks with specific day tasks for a given date
+export const mergeTasks = (
+  date: string,
+  baseWeek: BaseWeekTemplate,
+  specificTasks: SpecificDayTasks
+): Omit<
+  Task,
+  "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
+>[] => {
+  const dayOfWeek = getDayOfWeek(date);
+  const baseTasks = baseWeek[dayOfWeek] || [];
+  const specificDayTasks = specificTasks[date] || [];
+
+  // Mark base tasks as repeatable
+  const markedBaseTasks = baseTasks.map((task) => ({
+    ...task,
+    isRepeatable: true,
+  }));
+
+  // Combine and sort by start time
+  return [...markedBaseTasks, ...specificDayTasks].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime)
+  );
 };
