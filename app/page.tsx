@@ -5,6 +5,7 @@ import { Task, DayTasks, TASK_TEMPLATE } from "@/app/lib/types";
 import TodayView from "@/app/components/TodayView";
 import StatisticsView from "@/app/components/StatisticsView";
 import HistoryView from "@/app/components/HistoryView";
+import CalendarView from "@/app/components/CalendarView";
 import TaskModal from "@/app/components/TaskModal";
 import TaskEditorModal from "@/app/components/TaskEditorModal";
 
@@ -188,10 +189,10 @@ export default function Home() {
       {/* Navigation Tabs */}
       <div className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex space-x-4">
+          <div className="flex space-x-4 overflow-x-auto">
             <button
               onClick={() => setCurrentView("today")}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 currentView === "today"
                   ? "border-blue-500 text-blue-400"
                   : "border-transparent text-gray-400 hover:text-gray-200"
@@ -200,8 +201,18 @@ export default function Home() {
               Today
             </button>
             <button
+              onClick={() => setCurrentView("calendar")}
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
+                currentView === "calendar"
+                  ? "border-blue-500 text-blue-400"
+                  : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              Calendar
+            </button>
+            <button
               onClick={() => setCurrentView("statistics")}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 currentView === "statistics"
                   ? "border-blue-500 text-blue-400"
                   : "border-transparent text-gray-400 hover:text-gray-200"
@@ -211,7 +222,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setCurrentView("history")}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors ${
+              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 currentView === "history"
                   ? "border-blue-500 text-blue-400"
                   : "border-transparent text-gray-400 hover:text-gray-200"
@@ -234,6 +245,14 @@ export default function Home() {
             openTaskModal={openTaskModal}
             onAddTask={handleAddTask}
             onEditTask={handleEditTask}
+          />
+        )}
+
+        {currentView === "calendar" && (
+          <CalendarView
+            tasks={tasks}
+            setSelectedDate={setSelectedDate}
+            setCurrentView={setCurrentView}
           />
         )}
 

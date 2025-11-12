@@ -114,7 +114,7 @@ export default function TodayView({
                       });
                     }
                   }}
-                  className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                     task.completed
                       ? "bg-green-600 border-green-600"
                       : "border-gray-600 hover:border-blue-500"
