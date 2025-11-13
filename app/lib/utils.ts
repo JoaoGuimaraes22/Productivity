@@ -1,3 +1,6 @@
+// React import for hooks
+import React from "react";
+
 // Time utility functions
 
 /**
@@ -107,7 +110,15 @@ export const DAYS_CONFIG = [
 /**
  * Short day labels only
  */
-export const DAY_LABELS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export const DAY_LABELS_SHORT = [
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+  "Sun",
+];
 
 /**
  * Day keys only
@@ -216,6 +227,3 @@ export const getVisibleHours = (timeRange: {
 }): number[] => {
   return HOURS.slice(timeRange.startHour, timeRange.endHour);
 };
-
-// React import for hooks
-import React from "react";

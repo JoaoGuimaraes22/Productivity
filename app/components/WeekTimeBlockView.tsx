@@ -140,7 +140,7 @@ export default function WeekTimeBlockView({
 
         {/* Day headers */}
         <div className="flex">
-          <div className="w-16 flex-shrink-0" /> {/* Time column spacer */}
+          <div className="w-16 shrink-0" /> {/* Time column spacer */}
           {weekDates.map((date, index) => (
             <div
               key={formatDate(date)}
@@ -148,7 +148,9 @@ export default function WeekTimeBlockView({
                 isToday(date) ? "border-blue-500" : "border-transparent"
               }`}
             >
-              <div className="text-xs text-gray-400">{DAY_LABELS_SHORT[index]}</div>
+              <div className="text-xs text-gray-400">
+                {DAY_LABELS_SHORT[index]}
+              </div>
               <div
                 className={`text-sm font-semibold ${
                   isToday(date) ? "text-blue-400" : "text-white"
@@ -176,7 +178,7 @@ export default function WeekTimeBlockView({
             >
               <div className="flex">
                 {/* Time label */}
-                <div className="w-16 flex-shrink-0 pr-2 pt-1">
+                <div className="w-16 shrink-0 pr-2 pt-1">
                   <span className="text-xs text-gray-400 font-medium">
                     {formatHour(hour)}
                   </span>
