@@ -13,6 +13,7 @@ import { useMemo } from "react";
 
 interface TimeBlockViewProps {
   selectedDate: string;
+  setSelectedDate: (date: string) => void;
   tasks: Task[];
   onTaskClick: (task: Task) => void;
   onAddTask: () => void;
@@ -23,12 +24,20 @@ const COMPLETED_OVERLAY = "opacity-60";
 
 export default function TimeBlockView({
   selectedDate,
+  setSelectedDate,
   tasks,
   onTaskClick,
   onAddTask,
   onTimeSlotClick,
 }: TimeBlockViewProps) {
   const isToday = isTodayString(selectedDate);
+  const today = new Date().toISOString().split("T")[0];
+
+  // Calculate completion stats
+  const completedCount = tasks.filter((t) => t.completed).length;
+  const completionPercentage = tasks.length > 0
+    ? (completedCount / tasks.length) * 100
+    : 0;
 
   // Calculate task positions and heights
   const taskBlocks = useMemo(() => {
@@ -63,28 +72,35 @@ export default function TimeBlockView({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-20">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-white">
-              {new Date(selectedDate + "T12:00:00").toLocaleDateString(
-                "en-US",
-                {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                }
+      {/* Header with Date Selector and Progress */}
+      <div className="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-20 space-y-4">
+        {/* Date Selector */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <label className="block text-sm font-medium text-gray-300">
+                Select Date
+              </label>
+              {!isToday && (
+                <button
+                  onClick={() => setSelectedDate(today)}
+                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors font-medium"
+                >
+                  Go to Today
+                </button>
               )}
-            </h2>
-            {isToday && (
-              <span className="text-sm text-blue-400 font-medium">Today</span>
-            )}
+            </div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              max={today}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
           <button
             onClick={onAddTask}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center space-x-2 self-end"
           >
             <svg
               className="w-4 h-4"
@@ -99,6 +115,43 @@ export default function TimeBlockView({
             </svg>
             <span>Add Task</span>
           </button>
+        </div>
+
+        {/* Selected Date Display */}
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            {new Date(selectedDate + "T12:00:00").toLocaleDateString(
+              "en-US",
+              {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              }
+            )}
+          </h2>
+          {isToday && (
+            <span className="text-sm text-blue-400 font-medium">Today</span>
+          )}
+        </div>
+
+        {/* Daily Progress */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-gray-300">Daily Progress</h3>
+            <span className="text-lg font-bold text-blue-400">
+              {completedCount}/{tasks.length}
+            </span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2.5">
+            <div
+              className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${completionPercentage}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            {completionPercentage.toFixed(0)}% complete
+          </p>
         </div>
       </div>
 
