@@ -1,6 +1,14 @@
 "use client";
 
 import { Task } from "@/app/lib/types";
+import {
+  timeToMinutes,
+  minutesToTime,
+  formatHour,
+  HOURS,
+  CATEGORY_COLORS_DARK,
+  isTodayString,
+} from "@/app/lib/utils";
 import { useMemo } from "react";
 
 interface TimeBlockViewProps {
@@ -11,31 +19,7 @@ interface TimeBlockViewProps {
   onTimeSlotClick: (time: string) => void;
 }
 
-const CATEGORY_COLORS_DARK = {
-  routine: "bg-blue-600 border-blue-500 hover:bg-blue-700",
-  fitness: "bg-red-600 border-red-500 hover:bg-red-700",
-  rest: "bg-green-600 border-green-500 hover:bg-green-700",
-  work: "bg-purple-600 border-purple-500 hover:bg-purple-700",
-  variable: "bg-yellow-600 border-yellow-500 hover:bg-yellow-700",
-};
-
 const COMPLETED_OVERLAY = "opacity-60";
-
-// Convert HH:MM to minutes since midnight
-const timeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-// Convert minutes to HH:MM
-const minutesToTime = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-};
-
-// Generate hours from 0-23
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export default function TimeBlockView({
   selectedDate,
@@ -44,8 +28,7 @@ export default function TimeBlockView({
   onAddTask,
   onTimeSlotClick,
 }: TimeBlockViewProps) {
-  const today = new Date().toISOString().split("T")[0];
-  const isToday = selectedDate === today;
+  const isToday = isTodayString(selectedDate);
 
   // Calculate task positions and heights
   const taskBlocks = useMemo(() => {
@@ -77,13 +60,6 @@ export default function TimeBlockView({
     const minutes = now.getHours() * 60 + now.getMinutes();
     return (minutes / 60) * 60; // Convert to pixels
   }, [isToday]);
-
-  const formatHour = (hour: number): string => {
-    if (hour === 0) return "12 AM";
-    if (hour === 12) return "12 PM";
-    if (hour < 12) return `${hour} AM`;
-    return `${hour - 12} PM`;
-  };
 
   return (
     <div className="flex flex-col h-full">

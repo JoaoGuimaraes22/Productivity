@@ -3,9 +3,20 @@
 import {
   BaseWeekTemplate,
   SpecificDayTasks,
-  getDayOfWeek,
   mergeTasks,
 } from "@/app/lib/types";
+import {
+  timeToMinutes,
+  formatDate,
+  getMondayOfWeek,
+  isToday,
+  formatHour,
+  calculateTimeRange,
+  getVisibleHours,
+  DAY_KEYS,
+  DAY_LABELS_SHORT,
+  CATEGORY_COLORS_SIMPLE,
+} from "@/app/lib/utils";
 import { useState, useMemo } from "react";
 
 interface WeekTimeBlockViewProps {
@@ -14,35 +25,6 @@ interface WeekTimeBlockViewProps {
   onTaskClick: (date: string, taskId: string) => void;
   onTimeSlotClick: (date: string, time: string) => void;
 }
-
-const CATEGORY_COLORS_DARK = {
-  routine: "bg-blue-600 border-blue-500",
-  fitness: "bg-red-600 border-red-500",
-  rest: "bg-green-600 border-green-500",
-  work: "bg-purple-600 border-purple-500",
-  variable: "bg-yellow-600 border-yellow-500",
-};
-
-// Convert HH:MM to minutes since midnight
-const timeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-// Get Monday of current week
-const getMondayOfWeek = (date: Date): Date => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
-};
-
-// Format date as YYYY-MM-DD
-const formatDate = (date: Date): string => {
-  return date.toISOString().split("T")[0];
-};
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export default function WeekTimeBlockView({
   baseWeek,
@@ -54,21 +36,10 @@ export default function WeekTimeBlockView({
     getMondayOfWeek(new Date())
   );
 
-  const days = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ];
-  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
   // Generate dates for the current week
   const weekDates = useMemo(
     () =>
-      days.map((_, index) => {
+      DAY_KEYS.map((_, index) => {
         const date = new Date(currentWeekStart);
         date.setDate(currentWeekStart.getDate() + index);
         return date;
@@ -97,44 +68,18 @@ export default function WeekTimeBlockView({
     return formatDate(currentWeekStart) === formatDate(thisWeekMonday);
   };
 
-  const isToday = (date: Date): boolean => {
-    const today = new Date();
-    return formatDate(date) === formatDate(today);
-  };
-
-  const formatHour = (hour: number): string => {
-    if (hour === 0) return "12 AM";
-    if (hour === 12) return "12 PM";
-    if (hour < 12) return `${hour} AM`;
-    return `${hour - 12} PM`;
-  };
-
   // Get earliest and latest task times to determine view range
   const timeRange = useMemo(() => {
-    let earliest = 24 * 60; // Start with end of day
-    let latest = 0;
-
-    weekDates.forEach((date) => {
+    const allTasks = weekDates.flatMap((date) => {
       const dateString = formatDate(date);
-      const tasks = mergeTasks(dateString, baseWeek, specificTasks);
-
-      tasks.forEach((task) => {
-        const start = timeToMinutes(task.startTime);
-        const end = timeToMinutes(task.endTime);
-        earliest = Math.min(earliest, start);
-        latest = Math.max(latest, end);
-      });
+      return mergeTasks(dateString, baseWeek, specificTasks);
     });
 
-    // Add padding
-    const startHour = Math.max(0, Math.floor(earliest / 60) - 1);
-    const endHour = Math.min(24, Math.ceil(latest / 60) + 1);
-
-    return { startHour, endHour };
+    return calculateTimeRange(allTasks);
   }, [weekDates, baseWeek, specificTasks]);
 
   const visibleHours = useMemo(() => {
-    return HOURS.slice(timeRange.startHour, timeRange.endHour);
+    return getVisibleHours(timeRange);
   }, [timeRange]);
 
   return (
@@ -203,7 +148,7 @@ export default function WeekTimeBlockView({
                 isToday(date) ? "border-blue-500" : "border-transparent"
               }`}
             >
-              <div className="text-xs text-gray-400">{dayLabels[index]}</div>
+              <div className="text-xs text-gray-400">{DAY_LABELS_SHORT[index]}</div>
               <div
                 className={`text-sm font-semibold ${
                   isToday(date) ? "text-blue-400" : "text-white"
@@ -290,7 +235,7 @@ export default function WeekTimeBlockView({
                       key={task.id}
                       onClick={() => onTaskClick(dateString, task.id)}
                       className={`absolute left-1 right-1 rounded border-l-4 p-1 transition-all cursor-pointer ${
-                        CATEGORY_COLORS_DARK[task.category]
+                        CATEGORY_COLORS_SIMPLE[task.category]
                       } hover:opacity-90`}
                       style={{
                         top: `${top}px`,
