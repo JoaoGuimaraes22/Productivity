@@ -1,6 +1,14 @@
 "use client";
 
 import { BaseWeekTemplate, DayOfWeek, Task } from "@/app/lib/types";
+import {
+  timeToMinutes,
+  formatHour,
+  calculateTimeRange,
+  getVisibleHours,
+  DAYS_CONFIG,
+  CATEGORY_COLORS_SIMPLE,
+} from "@/app/lib/utils";
 import { useState, useMemo } from "react";
 
 interface BaseWeekEditorProps {
@@ -16,22 +24,6 @@ interface BaseWeekEditorProps {
   ) => void;
 }
 
-const CATEGORY_COLORS_DARK = {
-  routine: "bg-blue-600 border-blue-500",
-  fitness: "bg-red-600 border-red-500",
-  rest: "bg-green-600 border-green-500",
-  work: "bg-purple-600 border-purple-500",
-  variable: "bg-yellow-600 border-yellow-500",
-};
-
-// Convert HH:MM to minutes since midnight
-const timeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-
 export default function BaseWeekEditor({
   baseWeek,
   onUpdateBaseWeek,
@@ -39,16 +31,6 @@ export default function BaseWeekEditor({
   onEditTask,
 }: BaseWeekEditorProps) {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
-
-  const days: { key: DayOfWeek; label: string; short: string }[] = [
-    { key: "monday", label: "Monday", short: "Mon" },
-    { key: "tuesday", label: "Tuesday", short: "Tue" },
-    { key: "wednesday", label: "Wednesday", short: "Wed" },
-    { key: "thursday", label: "Thursday", short: "Thu" },
-    { key: "friday", label: "Friday", short: "Fri" },
-    { key: "saturday", label: "Saturday", short: "Sat" },
-    { key: "sunday", label: "Sunday", short: "Sun" },
-  ];
 
   const handleDeleteTask = (dayOfWeek: DayOfWeek, taskId: string) => {
     if (!confirm("Delete this task from the base week template?")) return;
@@ -78,53 +60,14 @@ export default function BaseWeekEditor({
     });
   };
 
-  const formatHour = (hour: number): string => {
-    if (hour === 0) return "12 AM";
-    if (hour === 12) return "12 PM";
-    if (hour < 12) return `${hour} AM`;
-    return `${hour - 12} PM`;
-  };
-
   // Get earliest and latest task times across all days
   const timeRange = useMemo(() => {
-    let earliest = 24 * 60;
-    let latest = 0;
-
-    Object.values(baseWeek).forEach(
-      (
-        dayTasks: Omit<
-          Task,
-          "completed" | "quality" | "actualDuration" | "notes" | "completedAt"
-        >[]
-      ) => {
-        dayTasks.forEach(
-          (
-            task: Omit<
-              Task,
-              | "completed"
-              | "quality"
-              | "actualDuration"
-              | "notes"
-              | "completedAt"
-            >
-          ) => {
-            const start = timeToMinutes(task.startTime);
-            const end = timeToMinutes(task.endTime);
-            earliest = Math.min(earliest, start);
-            latest = Math.max(latest, end);
-          }
-        );
-      }
-    );
-
-    const startHour = Math.max(0, Math.floor(earliest / 60) - 1);
-    const endHour = Math.min(24, Math.ceil(latest / 60) + 1);
-
-    return { startHour, endHour };
+    const allTasks = Object.values(baseWeek).flat();
+    return calculateTimeRange(allTasks);
   }, [baseWeek]);
 
   const visibleHours = useMemo(() => {
-    return HOURS.slice(timeRange.startHour, timeRange.endHour);
+    return getVisibleHours(timeRange);
   }, [timeRange]);
 
   return (
@@ -160,7 +103,7 @@ export default function BaseWeekEditor({
                   <option value="" disabled>
                     Copy from...
                   </option>
-                  {days
+                  {DAYS_CONFIG
                     .filter((d) => d.key !== selectedDay)
                     .map((day) => (
                       <option key={day.key} value={day.key}>
@@ -181,7 +124,7 @@ export default function BaseWeekEditor({
 
         {/* Day selector buttons */}
         <div className="flex space-x-2 overflow-x-auto pb-2">
-          {days.map((day) => (
+          {DAYS_CONFIG.map((day) => (
             <button
               key={day.key}
               onClick={() => setSelectedDay(day.key)}
@@ -222,7 +165,7 @@ export default function BaseWeekEditor({
                     </span>
                   </div>
 
-                  {days.map((day) => (
+                  {DAYS_CONFIG.map((day) => (
                     <button
                       key={`${day.key}-${hour}`}
                       onClick={() => setSelectedDay(day.key)}
@@ -240,7 +183,7 @@ export default function BaseWeekEditor({
             ))}
 
             {/* Task blocks for each day */}
-            {days.map((day, dayIndex) => {
+            {DAYS_CONFIG.map((day, dayIndex) => {
               const dayTasks = baseWeek[day.key];
 
               return (
@@ -269,7 +212,7 @@ export default function BaseWeekEditor({
                           onEditTask(day.key, task);
                         }}
                         className={`absolute left-1 right-1 rounded border-l-4 p-1 transition-all cursor-pointer ${
-                          CATEGORY_COLORS_DARK[task.category]
+                          CATEGORY_COLORS_SIMPLE[task.category]
                         } hover:opacity-90`}
                         style={{
                           top: `${top}px`,
@@ -295,7 +238,7 @@ export default function BaseWeekEditor({
 
             {/* Day headers at top */}
             <div className="absolute top-0 left-16 right-0 h-8 bg-gray-800/90 border-b border-gray-700 flex backdrop-blur-sm">
-              {days.map((day, dayIndex) => (
+              {DAYS_CONFIG.map((day, dayIndex) => (
                 <div
                   key={day.key}
                   className="flex-1 text-center py-1 border-l border-gray-700 first:border-l-0"
@@ -356,7 +299,7 @@ export default function BaseWeekEditor({
                   <div
                     key={task.id}
                     className={`absolute left-1 right-1 rounded-lg border-l-4 p-2 transition-all ${
-                      CATEGORY_COLORS_DARK[task.category]
+                      CATEGORY_COLORS_SIMPLE[task.category]
                     }`}
                     style={{
                       top: `${top}px`,
@@ -416,7 +359,7 @@ export default function BaseWeekEditor({
             {selectedDay ? (
               <>
                 <span>
-                  {days.find((d) => d.key === selectedDay)?.label}:{" "}
+                  {DAYS_CONFIG.find((d) => d.key === selectedDay)?.label}:{" "}
                   {baseWeek[selectedDay].length} tasks
                 </span>
                 <button
@@ -442,7 +385,7 @@ export default function BaseWeekEditor({
                   if (
                     !confirm(
                       `Clear all tasks for ${
-                        days.find((d) => d.key === selectedDay)?.label
+                        DAYS_CONFIG.find((d) => d.key === selectedDay)?.label
                       }?`
                     )
                   )

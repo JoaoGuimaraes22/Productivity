@@ -6,6 +6,13 @@ import {
   getDayOfWeek,
   mergeTasks,
 } from "@/app/lib/types";
+import {
+  formatDate,
+  getMondayOfWeek,
+  isToday,
+  DAY_KEYS,
+  DAY_LABELS_SHORT,
+} from "@/app/lib/utils";
 import { useState } from "react";
 
 interface WeekViewProps {
@@ -22,19 +29,6 @@ const CATEGORY_COLORS_DARK = {
   variable: "bg-yellow-900 text-yellow-300 border-yellow-700",
 };
 
-// Get Monday of current week
-const getMondayOfWeek = (date: Date): Date => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  return new Date(d.setDate(diff));
-};
-
-// Format date as YYYY-MM-DD
-const formatDate = (date: Date): string => {
-  return date.toISOString().split("T")[0];
-};
-
 export default function WeekView({
   baseWeek,
   specificTasks,
@@ -44,19 +38,8 @@ export default function WeekView({
     getMondayOfWeek(new Date())
   );
 
-  const days = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ];
-  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
   // Generate dates for the current week
-  const weekDates = days.map((_, index) => {
+  const weekDates = DAY_KEYS.map((_, index) => {
     const date = new Date(currentWeekStart);
     date.setDate(currentWeekStart.getDate() + index);
     return date;
@@ -81,11 +64,6 @@ export default function WeekView({
   const isCurrentWeek = () => {
     const thisWeekMonday = getMondayOfWeek(new Date());
     return formatDate(currentWeekStart) === formatDate(thisWeekMonday);
-  };
-
-  const isToday = (date: Date): boolean => {
-    const today = new Date();
-    return formatDate(date) === formatDate(today);
   };
 
   return (
@@ -164,7 +142,7 @@ export default function WeekView({
               <div className="p-3 border-b border-gray-700">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-semibold text-white">
-                    {dayLabels[index]}
+                    {DAY_LABELS_SHORT[index]}
                   </h3>
                   {isToday(date) && (
                     <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
