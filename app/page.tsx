@@ -11,7 +11,6 @@ import {
   mergeTasks,
   getDayOfWeek,
 } from "@/app/lib/types";
-import TodayView from "@/app/components/TodayView";
 import StatisticsView from "@/app/components/StatisticsView";
 import HistoryView from "@/app/components/HistoryView";
 import CalendarView from "@/app/components/CalendarView";
@@ -354,16 +353,6 @@ export default function Home() {
               Week
             </button>
             <button
-              onClick={() => setCurrentView("today")}
-              className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
-                currentView === "today"
-                  ? "border-blue-500 text-blue-400"
-                  : "border-transparent text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              List
-            </button>
-            <button
               onClick={() => setCurrentView("baseweek")}
               className={`py-3 px-4 font-medium border-b-2 transition-colors whitespace-nowrap ${
                 currentView === "baseweek"
@@ -412,6 +401,7 @@ export default function Home() {
         {currentView === "timeblock" && (
           <TimeBlockView
             selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
             tasks={getTodaysTasks()}
             onTaskClick={handleTaskClickFromTimeBlock}
             onAddTask={() => handleAddTask()}
@@ -425,18 +415,6 @@ export default function Home() {
             specificTasks={specificTasks}
             onTaskClick={handleWeekTaskClick}
             onTimeSlotClick={handleWeekTimeSlotClick}
-          />
-        )}
-
-        {currentView === "today" && (
-          <TodayView
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            tasks={getTodaysTasks()}
-            updateTask={updateTask}
-            openTaskModal={openTaskModal}
-            onAddTask={() => handleAddTask()}
-            onEditTask={(task) => handleEditTask(task)}
           />
         )}
 
