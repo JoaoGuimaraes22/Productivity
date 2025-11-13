@@ -39,15 +39,34 @@ export default function TimeBlockView({
     ? (completedCount / tasks.length) * 100
     : 0;
 
-  // Calculate task positions and heights
+  // Calculate task positions and heights with overlap detection
   const taskBlocks = useMemo(() => {
-    return tasks.map((task) => {
+    // Sort tasks by start time, then by duration (longer tasks first)
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const aStart = timeToMinutes(a.startTime);
+      const bStart = timeToMinutes(b.startTime);
+      if (aStart !== bStart) return aStart - bStart;
+      const aDuration = timeToMinutes(a.endTime) - aStart;
+      const bDuration = timeToMinutes(b.endTime) - bStart;
+      return bDuration - aDuration;
+    });
+
+    // Define task block type
+    type TaskBlock = {
+      task: Task;
+      top: number;
+      height: number;
+      startMinutes: number;
+      endMinutes: number;
+      column: number;
+      totalColumns: number;
+    };
+
+    // Calculate basic properties for each task
+    const taskData: TaskBlock[] = sortedTasks.map((task) => {
       const startMinutes = timeToMinutes(task.startTime);
       const endMinutes = timeToMinutes(task.endTime);
       const duration = endMinutes - startMinutes;
-
-      // Calculate position (top) and height in pixels
-      // Each hour is 60px tall
       const top = (startMinutes / 60) * 60;
       const height = (duration / 60) * 60;
 
@@ -57,8 +76,63 @@ export default function TimeBlockView({
         height,
         startMinutes,
         endMinutes,
+        column: 0,
+        totalColumns: 1,
       };
     });
+
+    // Assign columns to overlapping tasks
+    const columns: TaskBlock[][] = [];
+
+    taskData.forEach((currentTask) => {
+      // Find the first column where this task doesn't overlap
+      let assignedColumn = 0;
+      let placed = false;
+
+      for (let colIndex = 0; colIndex < columns.length; colIndex++) {
+        const column = columns[colIndex];
+        const hasOverlap = column.some((existingTask) => {
+          // Check if tasks overlap in time
+          return (
+            currentTask.startMinutes < existingTask.endMinutes &&
+            currentTask.endMinutes > existingTask.startMinutes
+          );
+        });
+
+        if (!hasOverlap) {
+          column.push(currentTask);
+          currentTask.column = colIndex;
+          placed = true;
+          break;
+        }
+      }
+
+      // If no suitable column found, create a new one
+      if (!placed) {
+        assignedColumn = columns.length;
+        columns.push([currentTask]);
+        currentTask.column = assignedColumn;
+      }
+    });
+
+    // Calculate total columns needed for each task's time range
+    taskData.forEach((currentTask) => {
+      let maxColumns = 1;
+
+      // Find all tasks that overlap with this task
+      taskData.forEach((otherTask) => {
+        if (
+          currentTask.startMinutes < otherTask.endMinutes &&
+          currentTask.endMinutes > otherTask.startMinutes
+        ) {
+          maxColumns = Math.max(maxColumns, otherTask.column + 1);
+        }
+      });
+
+      currentTask.totalColumns = maxColumns;
+    });
+
+    return taskData;
   }, [tasks]);
 
   // Calculate current time indicator position
@@ -192,19 +266,29 @@ export default function TimeBlockView({
 
           {/* Task blocks */}
           <div className="absolute left-20 right-0 top-0 bottom-0">
-            {taskBlocks.map(({ task, top, height }) => (
-              <button
-                key={task.id}
-                onClick={() => onTaskClick(task)}
-                className={`absolute left-1 right-1 rounded-lg border-l-4 p-2 transition-all cursor-pointer ${
-                  CATEGORY_COLORS_DARK[task.category]
-                } ${task.completed ? COMPLETED_OVERLAY : ""}`}
-                style={{
-                  top: `${top}px`,
-                  height: `${height}px`,
-                  minHeight: "30px",
-                }}
-              >
+            {taskBlocks.map(({ task, top, height, column, totalColumns }) => {
+              // Calculate width and left position based on column
+              const widthPercent = 100 / totalColumns;
+              const leftPercent = (column / totalColumns) * 100;
+
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => onTaskClick(task)}
+                  className={`absolute rounded-lg border-l-4 p-2 transition-all cursor-pointer ${
+                    CATEGORY_COLORS_DARK[task.category]
+                  } ${task.completed ? COMPLETED_OVERLAY : ""}`}
+                  style={{
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    minHeight: "30px",
+                    left: `${leftPercent}%`,
+                    width: `${widthPercent}%`,
+                    paddingLeft: column === 0 ? "0.5rem" : "0.25rem",
+                    paddingRight:
+                      column === totalColumns - 1 ? "0.5rem" : "0.25rem",
+                  }}
+                >
                 <div className="flex flex-col h-full overflow-hidden">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="text-sm font-semibold text-white text-left truncate">
@@ -244,7 +328,8 @@ export default function TimeBlockView({
                   )}
                 </div>
               </button>
-            ))}
+            );
+            })}
           </div>
 
           {/* Current time indicator */}
