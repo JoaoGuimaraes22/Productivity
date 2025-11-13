@@ -117,9 +117,6 @@ export default function CalendarView({
   const handleDayClick = (dateString: string, isCurrentMonth: boolean) => {
     if (!isCurrentMonth) return; // Don't allow clicking on prev/next month days
 
-    const today = new Date().toISOString().split("T")[0];
-    if (dateString > today) return; // Don't allow future dates
-
     setSelectedDate(dateString);
     setCurrentView("today");
   };
@@ -211,14 +208,12 @@ export default function CalendarView({
                 onClick={() =>
                   handleDayClick(dayData.dateString, dayData.isCurrentMonth)
                 }
-                disabled={!dayData.isCurrentMonth || isFuture}
+                disabled={!dayData.isCurrentMonth}
                 className={`
                   aspect-square p-1 md:p-2 rounded-md md:rounded-lg border-2 transition-all touch-manipulation
                   ${
                     !dayData.isCurrentMonth
                       ? "bg-gray-900 border-gray-800 text-gray-600 cursor-default"
-                      : isFuture
-                      ? "bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed"
                       : isToday
                       ? "bg-blue-900 border-blue-500 hover:bg-blue-800"
                       : hasData
@@ -234,8 +229,6 @@ export default function CalendarView({
                         ? "text-gray-600"
                         : isToday
                         ? "text-blue-300"
-                        : isFuture
-                        ? "text-gray-500"
                         : "text-white"
                     }`}
                   >
@@ -243,7 +236,7 @@ export default function CalendarView({
                   </span>
 
                   {/* Completion indicator */}
-                  {stats && dayData.isCurrentMonth && !isFuture && (
+                  {stats && dayData.isCurrentMonth && (
                     <div className="flex flex-col items-center space-y-0.5">
                       <div
                         className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${getCompletionColor(
